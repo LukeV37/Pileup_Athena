@@ -1,13 +1,16 @@
-* Convert AOD to FTAG1:
+# Convert AOD to FTAG1:
 Origin: https://twiki.cern.ch/twiki/bin/view/AtlasProtected/DerivationFramework
 
+```
 setupATLAS --quiet
 asetup Athena,25.0.22
 Derivation_tf.py --CA --inputAODFile input.AOD.pool.root --outputDAODFile output.pool.root --formats FTAG1
+```
 
-* Set up AthAnalysis:
+# Set up AthAnalysis:
 Origin: https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/AthAnalysis
 
+```
 setupATLAS --quiet
 mkdir source build run
 cd build
@@ -17,3 +20,4 @@ acm new_skeleton MyPackage
 acm compile
 cd ../run
 athena myJobOptions.py
+```
