@@ -8,7 +8,7 @@ Then run the job using:
 cd ./run
 athena myJobOptions.py
 ```
-Make sure you have modified `myJobOptions.py` to point to the path of your input file. \\
+Make sure you have modified `myJobOptions.py` to point to the path of your input file.
 
 Use the following command to download a sample file: 
 ```
