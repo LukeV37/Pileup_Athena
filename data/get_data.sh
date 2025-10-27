@@ -1,1 +1,1 @@
-rucio get --nrandom 1 mc20_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_FTAG1.e6337_s3681_r13167_p6922
+rucio get --nrandom 1 mc21_14TeV.601229.PhPy8EG_A14_ttbar_hdamp258p75_SingleLep.merge.AOD.e8481_s4149_r14701_r14702_tid33629038_00
