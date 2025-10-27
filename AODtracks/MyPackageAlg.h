@@ -48,6 +48,7 @@ class MyPackageAlg: public ::AthAnalysisAlgorithm {
   std::vector<float>* m_track_z0;
   std::vector<int>* m_track_pid;
   std::vector<int>* m_track_isPU;
+  std::vector<int>* m_track_isW;
 }; 
 
 #endif //> !MYPACKAGE_MYPACKAGEALG_H

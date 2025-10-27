@@ -40,6 +40,7 @@ StatusCode MyPackageAlg::initialize() {
   m_track_z0         = new std::vector<float>();
   m_track_pid        = new std::vector<int>();
   m_track_isPU       = new std::vector<int>();
+  m_track_isW        = new std::vector<int>();
 
   m_myTree->Branch("track_pt",         &m_track_pt        );
   m_myTree->Branch("track_eta",        &m_track_eta       );
@@ -50,6 +51,7 @@ StatusCode MyPackageAlg::initialize() {
   m_myTree->Branch("track_z0",         &m_track_z0        );
   m_myTree->Branch("track_pid",        &m_track_pid       );
   m_myTree->Branch("track_isPU",       &m_track_isPU      );
+  m_myTree->Branch("track_isW",        &m_track_isW       );
 
   CHECK( histSvc()->regTree("/MYSTREAM/myTree", m_myTree) );
 
@@ -126,7 +128,7 @@ StatusCode MyPackageAlg::execute() {
   CHECK(evtStore()->retrieve(tracks, "InDetTrackParticles"));
   std::cout << "number of tracks: " << tracks->size() << std::endl;
   for (const xAOD::TrackParticle* track : *tracks) {
-    int pdgId = -999, isPU = -999;
+    int pdgId = -999, isPU = -999, isW = 0;
     TruthLink link = track->auxdata<TruthLink>("truthParticleLink");
     if (link.isValid()) {
       const xAOD::TruthParticle* truth = *link;
@@ -134,6 +136,36 @@ StatusCode MyPackageAlg::execute() {
       std::map<const xAOD::TruthParticle*, int>::iterator it = truthMap.find(truth);
       if (it!=truthMap.end()) {
 	isPU = it->second;
+      }
+      // trace particle origin
+      if (isPU<0) { // look at HS only
+	//std::cout << "Particle " << truth->pdgId();
+	std::vector<const xAOD::TruthParticle*> origin;
+	origin.push_back(truth);
+	std::vector<const xAOD::TruthParticle*> new_origin;
+	while (!origin.empty()) {
+	  new_origin.clear();
+	  for (unsigned int ip = 0; ip<origin.size(); ++ip) {
+	    truth = origin[ip];
+	    if (truth==0 || !truth->hasProdVtx()) continue;
+	    int pid = truth->pdgId();
+	    if (abs(pid)==24) isW = pid;
+	    const xAOD::TruthVertex* vertex = truth->production_vertex();
+	    if (vertex==0) continue;
+	    int nin = vertex->nIncomingParticles();
+	    if (nin==0) continue;
+	    //std::cout << " <- "; if (nin>1) std::cout << "(";
+	    for (int in = 0; in<nin; ++in) {
+	      truth = vertex->incomingParticle(in);
+	      if (truth==0) continue;
+	      new_origin.push_back(truth);
+	      //if (in>0) std::cout << " "; std::cout << truth->pdgId();
+	    }
+	    //if (nin>1) std::cout << ")";
+	  }
+	  origin.swap(new_origin);
+	}
+	//std::cout << std::endl;
       }
     }
     m_track_pt->push_back(track->pt());
@@ -145,6 +177,7 @@ StatusCode MyPackageAlg::execute() {
     m_track_z0->push_back(track->z0());
     m_track_pid->push_back(pdgId);
     m_track_isPU->push_back(isPU);
+    m_track_isW->push_back(isW);
   }
 
   m_myTree->Fill();
@@ -157,6 +190,7 @@ StatusCode MyPackageAlg::execute() {
   m_track_z0->clear();
   m_track_pid->clear();
   m_track_isPU->clear();
+  m_track_isW->clear();
 
   setFilterPassed(true); //if got here, assume that means algorithm passed
   return StatusCode::SUCCESS;
