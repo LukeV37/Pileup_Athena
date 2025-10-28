@@ -1,6 +1,6 @@
 #!/bin/bash
 setupATLAS --quiet
-mkdir AthAnalysis && cd AthAnalysis
+mkdir TrkAnalysis && cd TrkAnalysis
 mkdir source build run
 cd build
 acmSetup --sourcedir=../source AthAnalysis,25.2.35
