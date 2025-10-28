@@ -1,0 +1,4 @@
+JetAnalysis/
+TrkAnalysis/
+FastJet_Clustering/fastjet-3.5.1/
+*.root
