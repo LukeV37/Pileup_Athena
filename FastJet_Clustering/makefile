@@ -21,6 +21,6 @@ cluster_dict.cxx: ./LinkDef.h
 	rootcling cluster_dict.cxx ./LinkDef.h
 
 clean:
-	rm -f run_clustering
-	rm -f cluster*dict*.*
-	rm -f cluster*.o
+	@rm -f run_clustering
+	@rm -f cluster*dict*.*
+	@rm -f cluster*.o

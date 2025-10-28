@@ -25,15 +25,15 @@ int main(int argc, char *argv[])
     
     // Set address of input branches
     inTree->SetBranchAddress("eventnb", &EvntNum);
-    inTree->SetBranchAddress("trk_pt", &trk_pt);
-    inTree->SetBranchAddress("trk_eta", &trk_eta);
-    inTree->SetBranchAddress("trk_phi", &trk_phi);
-    inTree->SetBranchAddress("trk_q", &trk_q);
-    inTree->SetBranchAddress("trk_d0", &trk_d0);
-    inTree->SetBranchAddress("trk_z0", &trk_z0);
-    inTree->SetBranchAddress("trk_pid", &trk_pid);
-    inTree->SetBranchAddress("trk_isPU", &trk_isPU);
-    inTree->SetBranchAddress("trk_isW", &trk_isW);
+    inTree->SetBranchAddress("track_pt", &trk_pt);
+    inTree->SetBranchAddress("track_eta", &trk_eta);
+    inTree->SetBranchAddress("track_phi", &trk_phi);
+    inTree->SetBranchAddress("track_q", &trk_q);
+    inTree->SetBranchAddress("track_d0", &trk_d0);
+    inTree->SetBranchAddress("track_z0", &trk_z0);
+    inTree->SetBranchAddress("track_pid", &trk_pid);
+    inTree->SetBranchAddress("track_isPU", &trk_isPU);
+    inTree->SetBranchAddress("track_isW", &trk_isW);
 
     // Define output file
     TFile *outfile = new TFile("out.root","recreate");
