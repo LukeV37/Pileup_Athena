@@ -135,7 +135,6 @@ int main(int argc, char *argv[])
 
             double true_Efrac = vtot.E(); if (true_Efrac>0) true_Efrac = vhs.E()/true_Efrac;
             double true_Mfrac = vtot.M(); if (true_Mfrac>0) true_Mfrac = vhs.M()/true_Mfrac;
-            std::cout << true_Efrac << "\t" << true_Mfrac << std::endl;
             jet_Efrac.push_back(true_Efrac);
             jet_Mfrac.push_back(true_Mfrac);
         }
