@@ -10,6 +10,7 @@
 #include "TRandom3.h"
 #include <TRandom.h>
 #include "TString.h"
+#include "TLorentzVector.h"
 
 int main(int argc, char *argv[])
 {
@@ -98,6 +99,8 @@ int main(int argc, char *argv[])
             jet_phi.push_back(jet.phi());
             jet_m.push_back(jet.m());
 
+            TLorentzVector vtot, vhs;
+
             std::vector<float> trk_pt_tmp, trk_eta_tmp, trk_phi_tmp, trk_q_tmp,trk_d0_tmp, trk_z0_tmp;
             std::vector<int> trk_pid_tmp, trk_isPU_tmp, trk_isW_tmp;
 
@@ -113,6 +116,12 @@ int main(int argc, char *argv[])
                 trk_pid_tmp.push_back(trk_pid->at(idx));
                 trk_isPU_tmp.push_back(trk_isPU->at(idx));
                 trk_isW_tmp.push_back(trk_isW->at(idx));
+
+                TLorentzVector v; v.SetPtEtaPhiM(trk_pt->at(idx),trk_eta->at(idx),trk_phi->at(idx),0.0);
+                vtot += v;
+                if (trk_isPU->at(idx)<0){
+                    vhs += v;
+                }
             }
             constituent_pt.push_back(trk_pt_tmp);
             constituent_eta.push_back(trk_eta_tmp);
@@ -123,9 +132,16 @@ int main(int argc, char *argv[])
             constituent_pid.push_back(trk_pid_tmp);
             constituent_isPU.push_back(trk_isPU_tmp);
             constituent_isW.push_back(trk_isW_tmp);
+
+            double true_Efrac = vtot.E(); if (true_Efrac>0) true_Efrac = vhs.E()/true_Efrac;
+            double true_Mfrac = vtot.M(); if (true_Mfrac>0) true_Mfrac = vhs.M()/true_Mfrac;
+            std::cout << true_Efrac << "\t" << true_Mfrac << std::endl;
+            jet_Efrac.push_back(true_Efrac);
+            jet_Mfrac.push_back(true_Mfrac);
         }
         outTree->Fill();
         jet_pt.clear(); jet_eta.clear(); jet_phi.clear(); jet_m.clear();
+        jet_Efrac.clear(); jet_Mfrac.clear();
         constituent_pt.clear(); constituent_eta.clear(); constituent_phi.clear(); constituent_q.clear(); constituent_d0.clear(); constituent_z0.clear();
         constituent_pid.clear(); constituent_isPU.clear(); constituent_isW.clear();
     }
