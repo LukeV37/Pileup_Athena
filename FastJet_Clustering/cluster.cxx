@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 
     // Initialize input branches
     int EvntNum;
-    std::vector<float> *trk_pt=0,*trk_eta=0,*trk_phi=0,*trk_q=0,*trk_d0=0,*trk_z0=0;
+    std::vector<float> *trk_pt=0,*trk_eta=0,*trk_phi=0,*trk_q=0,*trk_d0=0,*trk_z0=0, *trk_e=0;
     std::vector<int> *trk_pid=0,*trk_isPU=0,*trk_isW=0;
     
     // Set address of input branches
@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
     inTree->SetBranchAddress("track_pt", &trk_pt);
     inTree->SetBranchAddress("track_eta", &trk_eta);
     inTree->SetBranchAddress("track_phi", &trk_phi);
+    inTree->SetBranchAddress("track_e", &trk_e);
     inTree->SetBranchAddress("track_q", &trk_q);
     inTree->SetBranchAddress("track_d0", &trk_d0);
     inTree->SetBranchAddress("track_z0", &trk_z0);
@@ -45,6 +46,7 @@ int main(int argc, char *argv[])
     std::vector<std::vector<float> > constituent_pt, constituent_eta, constituent_phi, constituent_q, constituent_d0, constituent_z0;
     std::vector<std::vector<int> > constituent_pid, constituent_isPU, constituent_isW;
 
+    outTree->Branch("eventnb", &EvntNum);
     outTree->Branch("jet_pt", &jet_pt);
     outTree->Branch("jet_eta", &jet_eta);
     outTree->Branch("jet_phi", &jet_phi);
@@ -83,14 +85,15 @@ int main(int argc, char *argv[])
         // Store particles in fasjet::PsuedoJet objects and set the index
         int num_particles = trk_pt->size();
         for (int particle=0; particle<num_particles; particle++){
-            fastjet::PseudoJet fj(trk_pt->at(particle), trk_eta->at(particle), trk_phi->at(particle), 0.0);
+            TLorentzVector fj_vec; fj_vec.SetPtEtaPhiE(trk_pt->at(particle),trk_eta->at(particle),trk_phi->at(particle),trk_e->at(particle));
+            fastjet::PseudoJet fj(fj_vec.Px(), fj_vec.Py(), fj_vec.Pz(), fj_vec.E());
             fj.set_user_index(particle++);
             fastjet_particles.push_back(fj);
         }
 
         // Cluster particles and pick up hardest largeR jet
         float R_small = 0.4;
-        float pTmin = 25; // GeV
+        float pTmin = 13000; // GeV
         fastjet::JetDefinition jetDef = fastjet::JetDefinition(fastjet::antikt_algorithm, R_small, fastjet::E_scheme, fastjet::Best);
         fastjet::ClusterSequence clustSeq_large(fastjet_particles, jetDef);
         auto jets = fastjet::sorted_by_pt( clustSeq_large.inclusive_jets(pTmin) );
@@ -119,7 +122,7 @@ int main(int argc, char *argv[])
                 trk_isPU_tmp.push_back(trk_isPU->at(idx));
                 trk_isW_tmp.push_back(trk_isW->at(idx));
 
-                TLorentzVector v; v.SetPtEtaPhiM(trk_pt->at(idx),trk_eta->at(idx),trk_phi->at(idx),0.0);
+                TLorentzVector v; v.SetPtEtaPhiM(trk_pt->at(idx),trk_eta->at(idx),trk_phi->at(idx),trk_e->at(idx));
                 vtot += v;
                 if (trk_isPU->at(idx)<0){
                     vhs += v;
