@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     TTree *outTree = new TTree("fastjet", "fastjet");
 
     // Initialize output branches
-    std::vector<float> jet_pt, jet_eta, jet_phi, jet_m, jet_Efrac, jet_Mfrac;
+    std::vector<float> jet_pt, jet_eta, jet_phi, jet_m, jet_Efrac, jet_Mfrac, jet_Wfrac;
     std::vector<std::vector<float> > constituent_pt, constituent_eta, constituent_phi, constituent_q, constituent_d0, constituent_z0;
     std::vector<std::vector<int> > constituent_pid, constituent_isPU, constituent_isW;
 
@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
     outTree->Branch("jet_m", &jet_m);
     outTree->Branch("jet_Efrac", &jet_Efrac);
     outTree->Branch("jet_Mfrac", &jet_Mfrac);
+    outTree->Branch("jet_Wfrac", &jet_Wfrac);
     outTree->Branch("constituent_pt", &constituent_pt);
     outTree->Branch("constituent_eta", &constituent_eta);
     outTree->Branch("constituent_phi", &constituent_phi);
@@ -99,7 +100,7 @@ int main(int argc, char *argv[])
             jet_phi.push_back(jet.phi());
             jet_m.push_back(jet.m());
 
-            TLorentzVector vtot, vhs;
+            TLorentzVector vtot, vhs, vW;
 
             std::vector<float> trk_pt_tmp, trk_eta_tmp, trk_phi_tmp, trk_q_tmp,trk_d0_tmp, trk_z0_tmp;
             std::vector<int> trk_pid_tmp, trk_isPU_tmp, trk_isW_tmp;
@@ -122,6 +123,9 @@ int main(int argc, char *argv[])
                 if (trk_isPU->at(idx)<0){
                     vhs += v;
                 }
+                if (abs(trk_isW->at(idx))==24){
+                    vW += v;
+                }
             }
             constituent_pt.push_back(trk_pt_tmp);
             constituent_eta.push_back(trk_eta_tmp);
@@ -135,12 +139,14 @@ int main(int argc, char *argv[])
 
             double true_Efrac = vtot.E(); if (true_Efrac>0) true_Efrac = vhs.E()/true_Efrac;
             double true_Mfrac = vtot.M(); if (true_Mfrac>0) true_Mfrac = vhs.M()/true_Mfrac;
+            double true_Wfrac = vtot.E(); if (true_Wfrac>0) true_Wfrac = vW.E()/true_Wfrac;
             jet_Efrac.push_back(true_Efrac);
             jet_Mfrac.push_back(true_Mfrac);
+            jet_Wfrac.push_back(true_Wfrac);
         }
         outTree->Fill();
         jet_pt.clear(); jet_eta.clear(); jet_phi.clear(); jet_m.clear();
-        jet_Efrac.clear(); jet_Mfrac.clear();
+        jet_Efrac.clear(); jet_Mfrac.clear(); jet_Wfrac.clear();
         constituent_pt.clear(); constituent_eta.clear(); constituent_phi.clear(); constituent_q.clear(); constituent_d0.clear(); constituent_z0.clear();
         constituent_pid.clear(); constituent_isPU.clear(); constituent_isW.clear();
     }
