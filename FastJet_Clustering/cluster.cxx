@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
                 trk_isPU_tmp.push_back(trk_isPU->at(idx));
                 trk_isW_tmp.push_back(trk_isW->at(idx));
 
-                TLorentzVector v; v.SetPtEtaPhiM(trk_pt->at(idx),trk_eta->at(idx),trk_phi->at(idx),trk_e->at(idx));
+                TLorentzVector v; v.SetPtEtaPhiE(trk_pt->at(idx),trk_eta->at(idx),trk_phi->at(idx),trk_e->at(idx));
                 vtot += v;
                 if (trk_isPU->at(idx)<0){
                     vhs += v;
