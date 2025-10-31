@@ -73,6 +73,7 @@ int main(int argc, char *argv[])
 
     int nEntries = inTree->GetEntries();
     for (int event=0; event<nEntries; event++){
+        if (event%100==0) std::cout << "Processing Event: " << event << "\r" << std::flush;
         inTree->GetEntry(event);
 
         std::vector<fastjet::PseudoJet> fastjet_particles;
