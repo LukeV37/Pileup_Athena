@@ -76,8 +76,12 @@ StatusCode MyPackageAlg::execute() {
   CHECK(evtStore()->retrieve(ei, "EventInfo"));
   ATH_MSG_INFO("eventNumber=" << ei->eventNumber());
 
+  eventnumber = ei->eventNumber();
+
   const xAOD::JetContainer* jets = 0;
   CHECK(evtStore()->retrieve(jets, "AntiKt4EMPFlowJets"));
+  //CHECK(evtStore()->retrieve(jets, "AntiKt4EMTopoJets"));
+  //CHECK(evtStore()->retrieve(jets, "AntiKt4TruthJets"));
   ATH_MSG_INFO("number of jets: " << jets->size());
 
   for (const xAOD::Jet* jet : *jets) {
