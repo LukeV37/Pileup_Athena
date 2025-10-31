@@ -4,7 +4,7 @@ rm fastjet-3.5.1.tar.gz
 
 cd fastjet-3.5.1
 ./configure --prefix=$PWD/fastjet-install
-make
+make -j4
 make check
 make install
 cd ..
