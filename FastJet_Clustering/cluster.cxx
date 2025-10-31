@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
         for (int particle=0; particle<num_particles; particle++){
             TLorentzVector fj_vec; fj_vec.SetPtEtaPhiE(trk_pt->at(particle),trk_eta->at(particle),trk_phi->at(particle),trk_e->at(particle));
             fastjet::PseudoJet fj(fj_vec.Px(), fj_vec.Py(), fj_vec.Pz(), fj_vec.E());
-            fj.set_user_index(particle++);
+            fj.set_user_index(particle);
             fastjet_particles.push_back(fj);
         }
 
