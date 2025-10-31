@@ -4,5 +4,5 @@ jps.AthenaCommonFlags.AccessMode = "ClassAccess"
 alg = CfgMgr.MyPackageAlg('AnalysisAlg')
 athAlgSeq += alg
 
-theApp.EvtMax = 10
+theApp.EvtMax = -1
 jps.AthenaCommonFlags.HistOutputs = ["MYSTREAM:a1.root"]
