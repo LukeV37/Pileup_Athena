@@ -19,23 +19,33 @@ MyPackageAlg::~MyPackageAlg() {}
 
 
 StatusCode MyPackageAlg::initialize() {
-  ATH_MSG_INFO ("Initializing " << name() << "...");
-  //
-  //This is called once, before the start of the event loop
-  //Retrieves of tools you have configured in the joboptions go here
-  //
+	ATH_MSG_INFO ("Initializing " << name() << "...");
 
-  //HERE IS AN EXAMPLE
-  //We will create a histogram and a ttree and register them to the histsvc
-  //Remember to configure the histsvc stream in the joboptions
-  //
-  //m_myHist = new TH1D("myHist","myHist",100,0,100);
-  //CHECK( histSvc()->regHist("/MYSTREAM/myHist", m_myHist) ); //registers histogram to output stream
-  //m_myTree = new TTree("myTree","myTree");
-  //CHECK( histSvc()->regTree("/MYSTREAM/SubDirectory/myTree", m_myTree) ); //registers tree to output stream inside a sub-directory
+  	m_myTree = new TTree("myTree","myTree");
+
+	m_myTree->Branch("runnb",   &runnumber  );
+	m_myTree->Branch("eventnb", &eventnumber);
+
+	m_jet_pt         = new std::vector<float>();
+	m_jet_eta        = new std::vector<float>();
+	m_jet_phi        = new std::vector<float>();
+	m_jet_m          = new std::vector<float>();
+	m_jet_pu         = new std::vector<float>();
+	m_jet_pc         = new std::vector<float>();
+	m_jet_pb         = new std::vector<float>();
+
+	m_myTree->Branch("jet_pt",         &m_jet_pt        );
+	m_myTree->Branch("jet_eta",        &m_jet_eta       );
+	m_myTree->Branch("jet_phi",        &m_jet_phi       );
+	m_myTree->Branch("jet_m",          &m_jet_m       );
+	m_myTree->Branch("jet_pu",         &m_jet_pu       );
+	m_myTree->Branch("jet_pc",         &m_jet_pc       );
+	m_myTree->Branch("jet_pb",         &m_jet_pb       );
+
+	CHECK( histSvc()->regTree("/MYSTREAM/myTree", m_myTree) );
 
 
-  return StatusCode::SUCCESS;
+	return StatusCode::SUCCESS;
 }
 
 StatusCode MyPackageAlg::finalize() {
@@ -71,13 +81,25 @@ StatusCode MyPackageAlg::execute() {
   ATH_MSG_INFO("number of jets: " << jets->size());
 
   for (const xAOD::Jet* jet : *jets) {
-    double pt = jet->pt();
+    m_jet_pt->push_back(jet->pt());
+    m_jet_eta->push_back(jet->eta());
+    m_jet_phi->push_back(jet->phi());
+    m_jet_m->push_back(jet->m());
     const xAOD::BTagging* bjet = xAOD::BTaggingUtilities::getBTagging(*jet);
-    double pu; bjet->pu("GN2v01",pu);
-    double pc; bjet->pc("GN2v01",pc);
-    double pb; bjet->pb("GN2v01",pb);
-    ATH_MSG_INFO("jet pt=" << pt << ", pu=" << pu << ", pc=" << pc << ", pb=" << pb);
+    double pu, pc, pb;
+    m_jet_pu->push_back(bjet->pu("GN2v01",pu));
+    m_jet_pc->push_back(bjet->pc("GN2v01",pc));
+    m_jet_pb->push_back(bjet->pb("GN2v01",pb));
   }
+
+  m_myTree->Fill();
+  m_jet_pt->clear();
+  m_jet_eta->clear();
+  m_jet_phi->clear();
+  m_jet_m->clear();
+  m_jet_pu->clear();
+  m_jet_pc->clear();
+  m_jet_pb->clear();
 
   setFilterPassed(true); //if got here, assume that means algorithm passed
   return StatusCode::SUCCESS;
