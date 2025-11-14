@@ -2,9 +2,14 @@
 #include "MyPackageAlg.h"
 
 #include "xAODEventInfo/EventInfo.h"
+#include <xAODTruth/TruthEventContainer.h>
+#include <xAODTruth/TruthPileupEventContainer.h>
 #include "xAODJet/JetContainer.h"
+#include <xAODTracking/Vertex.h>
 #include "xAODBTagging/BTagging.h"
 #include "xAODBTagging/BTaggingUtilities.h"
+
+#include <map>
 
 // useful code: https://gitlab.cern.ch/atlas/athena/-/blob/main/PhysicsAnalysis/JetTagging/FlavourTaggingTests/src/PhysicsVariablePlots.cxx?ref_type=heads
 
@@ -19,41 +24,35 @@ MyPackageAlg::~MyPackageAlg() {}
 
 
 StatusCode MyPackageAlg::initialize() {
-	ATH_MSG_INFO ("Initializing " << name() << "...");
+  ATH_MSG_INFO ("Initializing " << name() << "...");
 
-  	m_myTree = new TTree("myTree","myTree");
+  m_myTree = new TTree("myTree","myTree");
 
-	m_myTree->Branch("runnb",   &runnumber  );
-	m_myTree->Branch("eventnb", &eventnumber);
+  m_myTree->Branch("runnb",   &runnumber  );
+  m_myTree->Branch("eventnb", &eventnumber);
 
-	m_jet_pt         = new std::vector<float>();
-	m_jet_eta        = new std::vector<float>();
-	m_jet_phi        = new std::vector<float>();
-	m_jet_m          = new std::vector<float>();
-	m_jet_pu         = new std::vector<float>();
-	m_jet_pc         = new std::vector<float>();
-	m_jet_pb         = new std::vector<float>();
+  m_jet_algo       = new std::vector<int>();
+  m_jet_pt         = new std::vector<float>();
+  m_jet_eta        = new std::vector<float>();
+  m_jet_phi        = new std::vector<float>();
+  m_jet_e          = new std::vector<float>();
+  m_jet_m          = new std::vector<float>();
 
-	m_myTree->Branch("jet_pt",         &m_jet_pt        );
-	m_myTree->Branch("jet_eta",        &m_jet_eta       );
-	m_myTree->Branch("jet_phi",        &m_jet_phi       );
-	m_myTree->Branch("jet_m",          &m_jet_m       );
-	m_myTree->Branch("jet_pu",         &m_jet_pu       );
-	m_myTree->Branch("jet_pc",         &m_jet_pc       );
-	m_myTree->Branch("jet_pb",         &m_jet_pb       );
+  m_myTree->Branch("jet_algo",       &m_jet_algo      );
+  m_myTree->Branch("jet_pt",         &m_jet_pt        );
+  m_myTree->Branch("jet_eta",        &m_jet_eta       );
+  m_myTree->Branch("jet_phi",        &m_jet_phi       );
+  m_myTree->Branch("jet_e",          &m_jet_e         );
+  m_myTree->Branch("jet_m",          &m_jet_m         );
 
-	CHECK( histSvc()->regTree("/MYSTREAM/myTree", m_myTree) );
+  CHECK( histSvc()->regTree("/MYSTREAM/myTree", m_myTree) );
 
 
-	return StatusCode::SUCCESS;
+  return StatusCode::SUCCESS;
 }
 
 StatusCode MyPackageAlg::finalize() {
   ATH_MSG_INFO ("Finalizing " << name() << "...");
-  //
-  //Things that happen once at the end of the event loop go here
-  //
-
 
   return StatusCode::SUCCESS;
 }
@@ -71,39 +70,84 @@ StatusCode MyPackageAlg::execute() {
   //If never called, the algorithm is assumed to have 'passed' by default
   //
 
+  typedef ElementLink<xAOD::TrackParticleContainer> TrackLink;
+  typedef std::vector<TrackLink> TrackLinks;
+  typedef ElementLink<xAOD::TruthParticleContainer> TruthLink;
+  typedef std::vector<TruthLink> TruthLinks;
 
   const xAOD::EventInfo* ei = 0;
   CHECK(evtStore()->retrieve(ei, "EventInfo"));
-  ATH_MSG_INFO("eventNumber=" << ei->eventNumber());
+  std::cout << "eventNumber=" << ei->eventNumber() << std::endl;
 
+  runnumber   = ei->runNumber();
   eventnumber = ei->eventNumber();
 
-  const xAOD::JetContainer* jets = 0;
-  CHECK(evtStore()->retrieve(jets, "AntiKt4EMPFlowJets"));
-  //CHECK(evtStore()->retrieve(jets, "AntiKt4EMTopoJets"));
-  //CHECK(evtStore()->retrieve(jets, "AntiKt4TruthJets"));
-  ATH_MSG_INFO("number of jets: " << jets->size());
+  // collect various jet types
 
-  for (const xAOD::Jet* jet : *jets) {
-    m_jet_pt->push_back(jet->pt());
-    m_jet_eta->push_back(jet->eta());
-    m_jet_phi->push_back(jet->phi());
-    m_jet_m->push_back(jet->m());
-    const xAOD::BTagging* bjet = xAOD::BTaggingUtilities::getBTagging(*jet);
-    double pu, pc, pb;
-    m_jet_pu->push_back(bjet->pu("GN2v01",pu));
-    m_jet_pc->push_back(bjet->pc("GN2v01",pc));
-    m_jet_pb->push_back(bjet->pb("GN2v01",pb));
+  const char* chjetcols[] = {
+    "AntiKt4EMPFlowJets",
+    "AntiKt4EMTopoJets",
+    "AntiKt4UFOCSSKJets",
+    "AntiKt4TruthJets",
+    "AntiKt4TruthDressedWZJets"
+  };
+  const int njetcol = sizeof(chjetcols)/sizeof(const char*);
+
+  int jetalgo = 0;
+  for (int ijetcol = 0; ijetcol<njetcol; ++ijetcol) {
+
+    const xAOD::JetContainer* jets = 0;
+    CHECK(evtStore()->retrieve(jets, chjetcols[ijetcol]));
+    ATH_MSG_INFO("number of " << chjetcols[ijetcol] << ": " << jets->size());
+
+    for (const xAOD::Jet* jet : *jets) {
+      m_jet_algo->push_back(jetalgo);
+      m_jet_pt->push_back(jet->pt());
+      m_jet_eta->push_back(jet->eta());
+      m_jet_phi->push_back(jet->phi());
+      m_jet_e->push_back(jet->e());
+      m_jet_m->push_back(jet->m());
+    }
+    ++jetalgo;
+
+    if (ijetcol<=2) {
+      for (const xAOD::Jet* jet : *jets) {
+	m_jet_algo->push_back(jetalgo);
+	float pt  = jet->auxdata<float>("JetEMScaleMomentum_pt");
+	float eta = jet->auxdata<float>("JetEMScaleMomentum_eta");
+	float phi = jet->auxdata<float>("JetEMScaleMomentum_phi");
+	float m   = jet->auxdata<float>("JetEMScaleMomentum_m");
+	m_jet_pt->push_back(pt);
+	m_jet_eta->push_back(eta);
+	m_jet_phi->push_back(phi);
+	m_jet_e->push_back(sqrt(pow(m,2) + pow(pt*cosh(eta),2)));
+	m_jet_m->push_back(m);
+      }
+      ++jetalgo;
+
+      for (const xAOD::Jet* jet : *jets) {
+	m_jet_algo->push_back(jetalgo);
+	float pt  = jet->auxdata<float>("JetConstitScaleMomentum_pt");
+	float eta = jet->auxdata<float>("JetConstitScaleMomentum_eta");
+	float phi = jet->auxdata<float>("JetConstitScaleMomentum_phi");
+	float m   = jet->auxdata<float>("JetConstitScaleMomentum_m");
+	m_jet_pt->push_back(pt);
+	m_jet_eta->push_back(eta);
+	m_jet_phi->push_back(phi);
+	m_jet_e->push_back(sqrt(pow(m,2) + pow(pt*cosh(eta),2)));
+	m_jet_m->push_back(m);
+      }
+      ++jetalgo;
+    }
   }
 
   m_myTree->Fill();
+  m_jet_algo->clear();
   m_jet_pt->clear();
   m_jet_eta->clear();
   m_jet_phi->clear();
+  m_jet_e->clear();
   m_jet_m->clear();
-  m_jet_pu->clear();
-  m_jet_pc->clear();
-  m_jet_pb->clear();
 
   setFilterPassed(true); //if got here, assume that means algorithm passed
   return StatusCode::SUCCESS;
