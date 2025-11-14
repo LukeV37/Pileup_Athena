@@ -39,13 +39,12 @@ class MyPackageAlg: public ::AthAnalysisAlgorithm {
   int runnumber;
   int eventnumber;
 
+  std::vector<int>* m_jet_algo;
   std::vector<float>* m_jet_pt;
   std::vector<float>* m_jet_eta;
   std::vector<float>* m_jet_phi;
+  std::vector<float>* m_jet_e;
   std::vector<float>* m_jet_m;
-  std::vector<float>* m_jet_pu;
-  std::vector<float>* m_jet_pc;
-  std::vector<float>* m_jet_pb;
 }; 
 
 #endif //> !MYPACKAGE_MYPACKAGEALG_H
